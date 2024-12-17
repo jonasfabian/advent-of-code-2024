@@ -58,7 +58,7 @@ fetch("data.txt")
 
 function ggt(a, b) { // grösster gemeinsamer teiler
     if (b === 0) return a;
-    return gcd(b, a % b);
+    return ggt(b, a % b);
 }
 
 function calcualteAntinodes(antenna1, antenna2, width, height) {
