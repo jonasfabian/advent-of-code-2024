@@ -39,7 +39,7 @@ fetch("data.txt")
         Array.from(res.values()).forEach(entryCoordinates => {
             for (let i = 0; i < entryCoordinates.length; i++) {
                 for (let j = i + 1; j < entryCoordinates.length; j++) {
-                    const antinodes = calcualteAntinodes(entryCoordinates[i], entryCoordinates[j]);
+                    const antinodes = calcualteAntinodes(entryCoordinates[i], entryCoordinates[j], width, height);
                     antinodes.forEach(a => {
                         if (a.x >= 0 && a.x < width && a.y >= 0 && a.y < height) { // check bounds
                             allNodes.add(JSON.stringify(a));
@@ -56,12 +56,35 @@ fetch("data.txt")
     })
     .then(res => res);
 
-function calcualteAntinodes(antenna1, antenna2) {
-    const xDistance = antenna2.x - antenna1.x;
-    const yDistance = antenna2.y - antenna1.y;
+function ggt(a, b) { // grösster gemeinsamer teiler
+    if (b === 0) return a;
+    return gcd(b, a % b);
+}
 
-    const antinode = { x: antenna1.x - xDistance, y: antenna1.y - yDistance };
-    const antinode2 = { x: antenna2.x + xDistance, y: antenna2.y + yDistance };
+function calcualteAntinodes(antenna1, antenna2, width, height) {
+    const dx = antenna2.x - antenna1.x;
+    const dy = antenna2.y - antenna1.y;
+    const g = ggt(Math.abs(dx), Math.abs(dy));
+    const stepX = g === 0 ? 0 : dx / g;
+    const stepY = g === 0 ? 0 : dy / g;
 
-    return [antinode, antinode2];
+    const points = new Set();
+
+    if (stepX === 0 && stepY === 0) {
+        points.add(JSON.stringify({ x: antenna1.x, y: antenna1.y }));
+        return Array.from(points).map(str => JSON.parse(str));
+    }
+
+    function walk(x, y, sx, sy) {
+        while (x >= 0 && x < width && y >= 0 && y < height) {
+            points.add(JSON.stringify({x, y}));
+            x += sx;
+            y += sy;
+        }
+    }
+
+    walk(antenna1.x, antenna1.y, stepX, stepY);
+    walk(antenna1.x, antenna1.y, -stepX, -stepY);
+
+    return Array.from(points).map(str => JSON.parse(str));
 }
